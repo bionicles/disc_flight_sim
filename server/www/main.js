@@ -1,7 +1,7 @@
 import init, { simulate_flight } from './pkg/disc_flight_sim.js';
 
 // Declare Three.js variables in a broader scope
-let scene, camera, renderer, line = null;
+let scene, camera, renderer, line = null, controls = null;
 
 // Environment parameters (assuming these are fixed for now)
 const env = {
@@ -115,6 +115,10 @@ async function run() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; // an optional feature that adds inertia to the controls
+    controls.dampingFactor = 0.25;
+    controls.enableZoom = true;
 
     // Check if renderer.domElement is already a child of body
     // This can happen if run() is called multiple times, though current structure doesn't do that.
@@ -136,6 +140,9 @@ async function run() {
     // Animation loop
     function animate() {
         requestAnimationFrame(animate);
+        if (controls) {
+            controls.update();
+        }
         renderer.render(scene, camera);
     }
     animate();
