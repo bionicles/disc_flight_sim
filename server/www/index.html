@@ -20,6 +20,44 @@
             height: 100vh;
         }
 
+        #controls-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px;
+            background-color: rgba(50, 50, 50, 0.8);
+            border-radius: 5px;
+            z-index: 100; /* Ensure it's above the canvas */
+        }
+
+        #controls-container label {
+            display: block;
+            margin-top: 5px;
+        }
+
+        #controls-container input {
+            width: calc(100% - 10px); /* Adjust width as needed */
+            padding: 5px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+
+        #controls-container button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #controls-container button:hover {
+            background-color: #45a049;
+        }
+
         canvas {
             display: block;
         }
@@ -27,6 +65,39 @@
 </head>
 
 <body>
+    <div id="controls-container">
+        <label for="v0">Initial Velocity (m/s):</label>
+        <input type="number" id="v0" name="v0" value="10">
+
+        <label for="angle">Launch Angle (degrees):</label>
+        <input type="number" id="angle" name="angle" value="10">
+
+        <label for="spin">Initial Spin Rate (rad/s):</label>
+        <input type="number" id="spin" name="spin" value="10">
+
+        <label for="phi">Initial Roll Angle (degrees):</label>
+        <input type="number" id="phi" name="phi" value="0">
+
+        <label for="mass">Disc Mass (kg):</label>
+        <input type="number" id="mass" name="mass" value="0.175">
+
+        <label for="area">Disc Area (m^2):</label>
+        <input type="number" id="area" name="area" value="0.057">
+
+        <label for="cd">Drag Coefficient:</label>
+        <input type="number" id="cd" name="cd" value="0.18">
+
+        <label for="cl">Lift Coefficient:</label>
+        <input type="number" id="cl" name="cl" value="0.7">
+
+        <label for="gyro">Gyroscopic Stability Factor:</label>
+        <input type="number" id="gyro" name="gyro" value="1.0">
+
+        <label for="surface">Surface Roughness:</label>
+        <input type="number" id="surface" name="surface" value="0.1">
+
+        <button id="simulate-button">Simulate</button>
+    </div>
     <div id="container"></div>
 
     <!-- Three.js from CDN for rapid dev, switch to local for prod -->
