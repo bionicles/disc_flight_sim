@@ -1,5 +1,6 @@
 import init, { simulate_flight } from './pkg/disc_flight_sim.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.151.3/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // Declare Three.js variables in a broader scope
 let scene, camera, renderer, line = null, controls = null;
@@ -116,7 +117,7 @@ async function run() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; // an optional feature that adds inertia to the controls
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
