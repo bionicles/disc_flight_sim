@@ -4,3 +4,6 @@ install-wasm-pack:
 build:
     wasm-pack build --target web
     cp -r ./pkg ../server/www/pkg
+
+fuzz:
+    cargo fuzz run fuzz_target_1 --sanitizer none
