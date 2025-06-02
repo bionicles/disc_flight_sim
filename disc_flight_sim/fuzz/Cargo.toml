@@ -1,0 +1,26 @@
+[package]
+name = "disc_flight_sim-fuzz"
+version = "0.1.0"
+authors = ["Automatically generated"]
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+disc_flight_sim = { path = ".." }
+postcard = { version = "1.0", features = ["alloc"] }
+uom = { version = "0.37", features = [ "serde" ] } # Added uom as it's used in the fuzz target
+serde = { version = "1.0", features = ["derive"] }
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_target_1"
+path = "fuzz_targets/fuzz_target_1.rs"
+test = false
+doc = false
