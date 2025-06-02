@@ -8,7 +8,7 @@
 - WASM-ready: run in browser with [wasm-pack](https://rustwasm.github.io/wasm-pack/)
 - Fully documented equations
 - Tests for edge cases, happy paths
-- Three.js integration for 3D rendering (see `/www`)
+- [WIP] Three.js integration for 3D rendering (see `/www`)
 
 ---
 
@@ -16,23 +16,22 @@
 
 ### Prerequisites
 
-- Rust (`rustup`)
+- [Rust](https://www.rust-lang.org/tools/install): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- [Just](https://github.com/casey/just): `cargo install just`
 - [wasm-pack](https://rustwasm.github.io/wasm-pack/): `cargo install wasm-pack`
-- Node.js & npm (for the Three.js demo)
 
 ### Build & Test
 
 ```sh
 git clone https://github.com/YOURNAME/disc_flight_sim.git
-cd disc_flight_sim
 cargo test
 ```
 
 # Build WASM and Serve Demo
 ```sh
-wasm-pack build --target web
+just run
 ```
-Open http://localhost:8080 and toss some discs.
+Open http://localhost:3000 and check console log.
 
 # Usage (Rust)
 ```rust
@@ -45,6 +44,8 @@ let path = simulate_flight(&disc, &env);
 
 # Usage (JS/Three.js)
 
+you need to copy the `pkg` directory built by `wasm_pack` into the folder with your javascript
+see `disc_flight_sim/Justfile/build` for details
 ```js
 import init, { simulate_flight } from '../pkg/disc_flight_sim.js';
 // call simulate_flight and use output points with Three.js
@@ -52,7 +53,12 @@ import init, { simulate_flight } from '../pkg/disc_flight_sim.js';
 
 # TODO:
 
-- [ ] fuzz testing
+- [ ] render 3d trajectory from paths
+- [ ] calculate s(t), v(t), a(t) on the rust side
+- [ ] plot s(t), v(t), a(t) with `Chart.js` on the js side
+- [ ] fuzz test the simulation and see if it crashes
+- [ ] add nice ui to input disc parameters
+- [ ] simulate other things like flying saucers 🛸
 
 # Contributing
 PRs and bug reports are welcome. If your disc does a "loop-de-loop," tell us.
