@@ -27,12 +27,20 @@ async function run() {
     };
     console.log("simulate", {disc, env})
     const path = simulate_flight(disc, env);
-    console.log("Simulated path received. First point:", path[0]);
+
+    if (path && path.length > 0) {
+        console.log("First trajectory point from Rust:", JSON.stringify(path[0]));
+        // console.log("Sample of path data from Rust:", JSON.stringify(path.slice(0, 3)));
+    } else {
+        console.log("Path data from Rust is empty or undefined.");
+    }
+    // The console.log("worked!", { path }); can be kept if desired, or removed.
+    // For now, let's keep it as it shows the raw object structure if path is not empty.
     console.log("worked!", { path });
 
     // Data Processing
     const times = path.map(p => p.t);
-    const displacements = path.map(p => p.z); // Using z-coordinate for height
+    const displacements = path.map(p => Math.sqrt(p.x**2 + p.y**2 + p.z**2));
     const velocities = path.map(p => Math.sqrt(p.vx**2 + p.vy**2 + p.vz**2));
     const accelerations = path.map(p => Math.sqrt(p.ax**2 + p.ay**2 + p.az**2));
 
@@ -48,7 +56,7 @@ async function run() {
         data: {
             labels: times,
             datasets: [{
-                label: 'Height (z)',
+                label: 'Position Magnitude',
                 data: displacements,
                 borderColor: 'rgb(75, 192, 192)',
                 tension: 0.1
@@ -57,7 +65,7 @@ async function run() {
         options: {
             scales: {
                 y: {
-                    beginAtZero: false // Height can be non-zero start
+                    beginAtZero: true // Magnitude starts at or above zero
                 },
                 x: {
                     title: {

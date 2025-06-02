@@ -115,25 +115,25 @@ impl Default for EnvParams {
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct TrajectoryPoint {
     /// X coordinate (meters) at this time point.
-    pub x: Length,
+    pub x: f32,
     /// Y coordinate (meters) at this time point.
-    pub y: Length,
+    pub y: f32,
     /// Z coordinate (meters) (height above ground) at this time point.
-    pub z: Length,
+    pub z: f32,
     /// Time (seconds) since the start of the simulation.
-    pub t: Time,
+    pub t: f32,
     /// X velocity (m/s) at this time point.
-    pub vx: Velocity,
+    pub vx: f32,
     /// Y velocity (m/s) at this time point.
-    pub vy: Velocity,
+    pub vy: f32,
     /// Z velocity (m/s) at this time point.
-    pub vz: Velocity,
+    pub vz: f32,
     /// X acceleration (m/s²) at this time point.
-    pub ax: Acceleration,
+    pub ax: f32,
     /// Y acceleration (m/s²) at this time point.
-    pub ay: Acceleration,
+    pub ay: f32,
     /// Z acceleration (m/s²) at this time point.
-    pub az: Acceleration,
+    pub az: f32,
 }
 
 /// Simulate a disc golf flight in 3D with RK4 integration.
@@ -338,16 +338,16 @@ pub fn simulate(disc: &Disc, env: &EnvParams) -> Vec<TrajectoryPoint> {
 
 
         path.push(TrajectoryPoint {
-            x: state.x,
-            y: state.y,
-            z: state.z,
-            t,
-            vx: state.vx,
-            vy: state.vy,
-            vz: state.vz,
-            ax: derivatives.dvx,
-            ay: derivatives.dvy,
-            az: derivatives.dvz,
+            x: state.x.get::<meter>(),
+            y: state.y.get::<meter>(),
+            z: state.z.get::<meter>(),
+            t: t.get::<second>(),
+            vx: state.vx.get::<meter_per_second>(),
+            vy: state.vy.get::<meter_per_second>(),
+            vz: state.vz.get::<meter_per_second>(),
+            ax: derivatives.dvx.get::<meter_per_second_squared>(),
+            ay: derivatives.dvy.get::<meter_per_second_squared>(),
+            az: derivatives.dvz.get::<meter_per_second_squared>(),
         });
 
         // Store derivatives for prev_state, to be used in interpolation if needed
@@ -371,37 +371,37 @@ pub fn simulate(disc: &Disc, env: &EnvParams) -> Vec<TrajectoryPoint> {
             let interp_val = |a: f32, b: f32| frac.mul_add(b - a, a);
 
             // Interpolate velocities
-            let interp_vx = Velocity::new::<meter_per_second>(interp_val(prev_state.vx.get::<meter_per_second>(), state.vx.get::<meter_per_second>()));
-            let interp_vy = Velocity::new::<meter_per_second>(interp_val(prev_state.vy.get::<meter_per_second>(), state.vy.get::<meter_per_second>()));
-            let interp_vz = Velocity::new::<meter_per_second>(interp_val(prev_state.vz.get::<meter_per_second>(), state.vz.get::<meter_per_second>()));
+            let interp_vx_val = interp_val(prev_state.vx.get::<meter_per_second>(), state.vx.get::<meter_per_second>());
+            let interp_vy_val = interp_val(prev_state.vy.get::<meter_per_second>(), state.vy.get::<meter_per_second>());
+            let interp_vz_val = interp_val(prev_state.vz.get::<meter_per_second>(), state.vz.get::<meter_per_second>());
 
             // Use accelerations from prev_state for the interpolated point
-            let (prev_ax, prev_ay, prev_az) = prev_derivatives.map_or(
-                (
-                    Acceleration::new::<meter_per_second_squared>(0.0), // Default if None
-                    Acceleration::new::<meter_per_second_squared>(0.0),
-                    Acceleration::new::<meter_per_second_squared>(0.0),
+            let (prev_ax_val, prev_ay_val, prev_az_val) = prev_derivatives.map_or(
+                (0.0_f32, 0.0_f32, 0.0_f32), // Default if None
+                |pd| (
+                    pd.dvx.get::<meter_per_second_squared>(),
+                    pd.dvy.get::<meter_per_second_squared>(),
+                    pd.dvz.get::<meter_per_second_squared>(),
                 ),
-                |pd| (pd.dvx, pd.dvy, pd.dvz),
             );
 
             path.push(TrajectoryPoint {
-                x: Length::new::<meter>(interp_val(
+                x: interp_val(
                     prev_state.x.get::<meter>(),
                     state.x.get::<meter>(),
-                )),
-                y: Length::new::<meter>(interp_val(
+                ),
+                y: interp_val(
                     prev_state.y.get::<meter>(),
                     state.y.get::<meter>(),
-                )),
-                z: Length::new::<meter>(0.0),
-                t: prev_t + (t - prev_t) * frac, // estimate time at ground hit
-                vx: interp_vx,
-                vy: interp_vy,
-                vz: interp_vz,
-                ax: prev_ax,
-                ay: prev_ay,
-                az: prev_az,
+                ),
+                z: 0.0, // Hits ground
+                t: (prev_t + (t - prev_t) * frac).get::<second>(), // estimate time at ground hit, convert to f32
+                vx: interp_vx_val,
+                vy: interp_vy_val,
+                vz: interp_vz_val,
+                ax: prev_ax_val,
+                ay: prev_ay_val,
+                az: prev_az_val,
             });
             break;
         }
@@ -525,7 +525,7 @@ fn dynamics(state: &PhysicsState, disc: &Disc, env: &EnvParams) -> PhysicsDeriva
 mod tests {
     use super::*;
     use anyhow::anyhow;
-    use uom::si::length::meter;
+    // use uom::si::length::meter; // No longer needed for path.last().ok_or_else test directly
 
     #[test]
     fn zero_velocity_disc_drops() -> anyhow::Result<()> {
@@ -537,7 +537,8 @@ mod tests {
         let env = EnvParams::default();
         let path = simulate(&disc, &env);
         assert!(!path.is_empty());
-        assert!(path.last().ok_or_else(|| anyhow!("no path"))?.z <= Length::new::<meter>(0.0));
+        // Check if z is at or below 0.0. Note: z is now f32.
+        assert!(path.last().ok_or_else(|| anyhow!("no path"))?.z <= 0.0);
         Ok(())
     }
 
