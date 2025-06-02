@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Disc Flight Sim</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         html,
         body {
@@ -27,10 +28,10 @@
 </head>
 
 <body>
-    <div id="container"></div>
+    <canvas id="displacementChart" width="400" height="200"></canvas>
+    <canvas id="velocityChart" width="400" height="200"></canvas>
+    <canvas id="accelerationChart" width="400" height="200"></canvas>
 
-    <!-- Three.js from CDN for rapid dev, switch to local for prod -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.151.3/build/three.min.js"></script>
     <!-- Your WASM-generated JS; note: this path may need adjusting for your dev server! -->
     <script type="module" src="./main.js"></script>
 </body>

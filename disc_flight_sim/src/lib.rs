@@ -122,6 +122,18 @@ pub struct TrajectoryPoint {
     pub z: Length,
     /// Time (seconds) since the start of the simulation.
     pub t: Time,
+    /// X velocity (m/s) at this time point.
+    pub vx: Velocity,
+    /// Y velocity (m/s) at this time point.
+    pub vy: Velocity,
+    /// Z velocity (m/s) at this time point.
+    pub vz: Velocity,
+    /// X acceleration (m/s²) at this time point.
+    pub ax: Acceleration,
+    /// Y acceleration (m/s²) at this time point.
+    pub ay: Acceleration,
+    /// Z acceleration (m/s²) at this time point.
+    pub az: Acceleration,
 }
 
 /// Simulate a disc golf flight in 3D with RK4 integration.
@@ -311,15 +323,36 @@ pub fn simulate(disc: &Disc, env: &EnvParams) -> Vec<TrajectoryPoint> {
     let mut prev_state;
     let mut prev_t;
     let mut path = Vec::new();
+    let mut prev_derivatives: Option<PhysicsDerivative> = None;
+
     while t < env.max_t && state.z.get::<meter>() >= 0.0 {
         prev_state = state;
         prev_t = t;
+
+        // Calculate derivatives for current state (needed for accelerations)
+        let derivatives = dynamics(&state, disc, env);
+        if prev_derivatives.is_none() {
+            // For the very first point, prev_derivatives would be for the initial state
+            prev_derivatives = Some(dynamics(&prev_state, disc, env));
+        }
+
+
         path.push(TrajectoryPoint {
             x: state.x,
             y: state.y,
             z: state.z,
             t,
+            vx: state.vx,
+            vy: state.vy,
+            vz: state.vz,
+            ax: derivatives.dvx,
+            ay: derivatives.dvy,
+            az: derivatives.dvz,
         });
+
+        // Store derivatives for prev_state, to be used in interpolation if needed
+        prev_derivatives = Some(derivatives);
+
         state = rk4_step(
             &state,
             t,
@@ -335,19 +368,40 @@ pub fn simulate(disc: &Disc, env: &EnvParams) -> Vec<TrajectoryPoint> {
             let z1 = prev_state.z.get::<meter>();
             let z2 = state.z.get::<meter>();
             let frac = z1 / (z1 - z2); // How far between prev and current?
-            let interp = |a: f32, b: f32| frac.mul_add(b - a, a);
+            let interp_val = |a: f32, b: f32| frac.mul_add(b - a, a);
+
+            // Interpolate velocities
+            let interp_vx = Velocity::new::<meter_per_second>(interp_val(prev_state.vx.get::<meter_per_second>(), state.vx.get::<meter_per_second>()));
+            let interp_vy = Velocity::new::<meter_per_second>(interp_val(prev_state.vy.get::<meter_per_second>(), state.vy.get::<meter_per_second>()));
+            let interp_vz = Velocity::new::<meter_per_second>(interp_val(prev_state.vz.get::<meter_per_second>(), state.vz.get::<meter_per_second>()));
+
+            // Use accelerations from prev_state for the interpolated point
+            let (prev_ax, prev_ay, prev_az) = prev_derivatives.map_or(
+                (
+                    Acceleration::new::<meter_per_second_squared>(0.0), // Default if None
+                    Acceleration::new::<meter_per_second_squared>(0.0),
+                    Acceleration::new::<meter_per_second_squared>(0.0),
+                ),
+                |pd| (pd.dvx, pd.dvy, pd.dvz),
+            );
 
             path.push(TrajectoryPoint {
-                x: Length::new::<meter>(interp(
+                x: Length::new::<meter>(interp_val(
                     prev_state.x.get::<meter>(),
                     state.x.get::<meter>(),
                 )),
-                y: Length::new::<meter>(interp(
+                y: Length::new::<meter>(interp_val(
                     prev_state.y.get::<meter>(),
                     state.y.get::<meter>(),
                 )),
                 z: Length::new::<meter>(0.0),
                 t: prev_t + (t - prev_t) * frac, // estimate time at ground hit
+                vx: interp_vx,
+                vy: interp_vy,
+                vz: interp_vz,
+                ax: prev_ax,
+                ay: prev_ay,
+                az: prev_az,
             });
             break;
         }

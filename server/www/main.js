@@ -27,30 +27,99 @@ async function run() {
     };
     console.log("simulate", {disc, env})
     const path = simulate_flight(disc, env);
-    console.log("worked!", { path })
-    // Draw path with Three.js, basic line geometry
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    console.log("Simulated path received. First point:", path[0]);
+    console.log("worked!", { path });
 
-    const points = path.map(p => new THREE.Vector3(p.x, p.y, p.z));
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
-    const line = new THREE.Line(geometry, material);
-    scene.add(line);
+    // Data Processing
+    const times = path.map(p => p.t);
+    const displacements = path.map(p => p.z); // Using z-coordinate for height
+    const velocities = path.map(p => Math.sqrt(p.vx**2 + p.vy**2 + p.vz**2));
+    const accelerations = path.map(p => Math.sqrt(p.ax**2 + p.ay**2 + p.az**2));
 
-    camera.position.z = 20;
-    camera.position.y = -10;
-    camera.position.x = 10;
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    console.log("Processed data for charts:", { times, displacements, velocities, accelerations });
 
-    function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-    }
-    animate();
+    // Chart Creation
+    const displacementCtx = document.getElementById('displacementChart').getContext('2d');
+    const velocityCtx = document.getElementById('velocityChart').getContext('2d');
+    const accelerationCtx = document.getElementById('accelerationChart').getContext('2d');
+
+    new Chart(displacementCtx, {
+        type: 'line',
+        data: {
+            labels: times,
+            datasets: [{
+                label: 'Height (z)',
+                data: displacements,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false // Height can be non-zero start
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time (s)'
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(velocityCtx, {
+        type: 'line',
+        data: {
+            labels: times,
+            datasets: [{
+                label: 'Velocity Magnitude',
+                data: velocities,
+                borderColor: 'rgb(255, 99, 132)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time (s)'
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(accelerationCtx, {
+        type: 'line',
+        data: {
+            labels: times,
+            datasets: [{
+                label: 'Acceleration Magnitude',
+                data: accelerations,
+                borderColor: 'rgb(54, 162, 235)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time (s)'
+                    }
+                }
+            }
+        }
+    });
 }
 
 run();
