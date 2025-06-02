@@ -57,7 +57,8 @@ import init, { simulate_flight } from '../pkg/disc_flight_sim.js';
 - [ ] calculate s(t), v(t), a(t) on the rust side
 - [ ] plot s(t), v(t), a(t) with `Chart.js` on the js side
 - [ ] fuzz test the simulation and see if it crashes
-- [ ] add nice ui to input disc parameters
+- [x] add nice ui to input disc parameters
+- [ ] omit negative drag coefficient
 - [ ] simulate other things like flying saucers 🛸
 
 # Contributing
