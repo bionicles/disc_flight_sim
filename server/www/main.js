@@ -1,5 +1,36 @@
 import init, { simulate_flight } from './pkg/disc_flight_sim.js';
 
+const MIN_DRAG_COEFFICIENT = 0.001;
+
+function showToast(message) {
+    const container = document.getElementById('toast-container');
+    if (!container) {
+        console.error('Toast container not found!');
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    // Trigger reflow to enable animation
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        // Remove the toast from DOM after animation
+        setTimeout(() => {
+            if (toast.parentNode === container) { // Check if still child before removing
+                container.removeChild(toast);
+            }
+        }, 500); // Match CSS transition duration
+    }, 3000); // Toast visible for 3 seconds
+}
+
 // Declare Three.js variables in a broader scope
 let scene, camera, renderer, line = null;
 
@@ -109,6 +140,25 @@ async function run() {
     console.log("hello from main.js::run");
     await init();
     console.log("WASM module initialized");
+
+    // Add event listener for drag coefficient input clamping
+    const cdInput = document.getElementById('cd');
+    if (cdInput) {
+        cdInput.addEventListener('input', () => {
+            let val = parseFloat(cdInput.value);
+            // Check if the value is a number and less than MIN_DRAG_COEFFICIENT
+            if (!isNaN(val) && val < MIN_DRAG_COEFFICIENT) {
+                cdInput.value = MIN_DRAG_COEFFICIENT.toString();
+                showToast(`Drag coefficient was adjusted to the minimum allowed value of ${MIN_DRAG_COEFFICIENT}.`);
+            } else if (isNaN(val) && cdInput.value.trim() !== '' && cdInput.value.trim() !== '-') {
+                // Handle cases where input is not a valid number but not empty (e.g. "abc")
+                // Optionally, clear it or set to default, or just let getDiscParametersFromUI handle it
+                // For now, we'll let getDiscParametersFromUI handle NaN from non-numeric strings
+            }
+        });
+    } else {
+        console.error("Drag coefficient input field ('cd') not found!");
+    }
 
     // Initialize Three.js scene, camera, and renderer
     scene = new THREE.Scene();

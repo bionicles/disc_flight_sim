@@ -379,6 +379,7 @@ pub fn simulate(disc: &Disc, env: &EnvParams) -> Vec<TrajectoryPoint> {
 /// `PhysicsDerivative` for each state variable.
 #[allow(clippy::similar_names)]
 fn dynamics(state: &PhysicsState, disc: &Disc, env: &EnvParams) -> PhysicsDerivative {
+    const MIN_DRAG_COEFFICIENT: f32 = 0.001;
     // All physical values: use units!
     let mass = disc.mass;
     let area = disc.area;
@@ -416,7 +417,7 @@ fn dynamics(state: &PhysicsState, disc: &Disc, env: &EnvParams) -> PhysicsDeriva
     // = [kg] * [m] / [s^2]
     // = [kg·m/s^2] => newton
     let drag_force: Force =
-        Force::new::<newton>(-0.5 * rho.value * cd.value * area.value * rel_v * rel_v);
+        Force::new::<newton>(-0.5 * rho.value * cd.value.max(MIN_DRAG_COEFFICIENT) * area.value * rel_v * rel_v);
     let force_drag_x = drag_force * dir[0];
     let force_drag_y = drag_force * dir[1];
     let force_drag_z: Force = drag_force * dir[2];
@@ -524,5 +525,31 @@ mod tests {
         let env = EnvParams::default();
         let path = simulate(&disc, &env);
         assert!(!path.is_empty());
+    }
+
+    #[test]
+    fn negative_drag_coefficient_is_handled() -> anyhow::Result<()> {
+        let disc = Disc {
+            cd: Ratio::new::<ratio>(-0.2),
+            ..Default::default()
+        };
+        let env = EnvParams::default();
+        let path = simulate(&disc, &env);
+        assert!(!path.is_empty());
+        assert!(path.last().ok_or_else(|| anyhow!("no path"))?.z <= Length::new::<meter>(0.0));
+        Ok(())
+    }
+
+    #[test]
+    fn zero_drag_uses_min_drag_coefficient() -> anyhow::Result<()> {
+        let disc = Disc {
+            cd: Ratio::new::<ratio>(0.0),
+            ..Default::default()
+        };
+        let env = EnvParams::default();
+        let path = simulate(&disc, &env);
+        assert!(!path.is_empty());
+        assert!(path.last().ok_or_else(|| anyhow!("no path"))?.z <= Length::new::<meter>(0.0));
+        Ok(())
     }
 }
