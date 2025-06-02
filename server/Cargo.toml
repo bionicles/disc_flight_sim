@@ -1,0 +1,21 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2024"
+description = "Rust disc golf flight physics simulator with WASM and 3D output"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/bionicles/disc_flight_sim"
+keywords = ["disc-golf", "physics", "wasm", "simulation"]
+categories = ["science", "simulation", "web-programming", "wasm"]
+readme = "README.md"
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1.45.1", features = ["signal", "rt-multi-thread", "macros"] }
+tower-http = { version = "0.6.4", features = ["fs"] }
+anyhow = "1.0.98"
+disc_flight_sim = { path = "../disc_flight_sim" }
+serde = { version = "1.0", features = ["derive"] }
+
+[lints]
+workspace = true

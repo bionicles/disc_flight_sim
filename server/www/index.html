@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Disc Flight Sim</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: #111;
+            color: #fafafa;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+
+    <!-- Three.js from CDN for rapid dev, switch to local for prod -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.151.3/build/three.min.js"></script>
+    <!-- Your WASM-generated JS; note: this path may need adjusting for your dev server! -->
+    <script type="module" src="./main.js"></script>
+</body>
+
+</html>

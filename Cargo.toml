@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = [
+    "disc_flight_sim",
+    "server"
+]
+
+[workspace.lints.rust]
+rust-2024-compatibility = "warn"
+missing-docs = "deny"
+unsafe-code = "deny"
+
+[workspace.lints.clippy]
+complexity = { level = "deny", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+perf = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+
+# production-grade
+# arithmetic_side_effects = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+# more specific ones
+literal_string_with_formatting_args = "deny"
+alloc_instead_of_core = "deny"
+std_instead_of_alloc = "deny"
+std_instead_of_core = "deny"
+# single_call_fn = "warn"
+
