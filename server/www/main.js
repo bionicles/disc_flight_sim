@@ -1,4 +1,5 @@
 import init, { simulate_flight } from './pkg/disc_flight_sim.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.151.3/examples/jsm/controls/OrbitControls.js';
 
 // Declare Three.js variables in a broader scope
 let scene, camera, renderer, line = null, controls = null;
@@ -164,6 +165,4 @@ async function run() {
     }
 }
 
-window.onload = () => {
-  run().catch(console.error);
-};
+run().catch(console.error);
