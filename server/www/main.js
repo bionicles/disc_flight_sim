@@ -15,16 +15,49 @@ const env = {
 };
 
 function getDiscParametersFromUI() {
-    const v0 = parseFloat(document.getElementById('v0').value);
-    const angleDegrees = parseFloat(document.getElementById('angle').value);
-    const spin = parseFloat(document.getElementById('spin').value);
-    const phiDegrees = parseFloat(document.getElementById('phi').value);
-    const mass = parseFloat(document.getElementById('mass').value);
-    const area = parseFloat(document.getElementById('area').value);
-    const cd = parseFloat(document.getElementById('cd').value);
-    const cl = parseFloat(document.getElementById('cl').value);
-    const gyro = parseFloat(document.getElementById('gyro').value);
-    const surface = parseFloat(document.getElementById('surface').value);
+    // Default values
+    const defaults = {
+        v0: 20,
+        angleDegrees: 15, // Math.PI/12 radians
+        spin: 40,
+        phiDegrees: 0,
+        mass: 0.175,
+        area: 0.056,
+        cd: 0.6,
+        cl: 0.7,
+        gyro: 1.0,
+        surface: 0.057
+    };
+
+    let v0 = parseFloat(document.getElementById('v0').value);
+    if (isNaN(v0)) v0 = defaults.v0;
+
+    let angleDegrees = parseFloat(document.getElementById('angle').value);
+    if (isNaN(angleDegrees)) angleDegrees = defaults.angleDegrees;
+
+    let spin = parseFloat(document.getElementById('spin').value);
+    if (isNaN(spin)) spin = defaults.spin;
+
+    let phiDegrees = parseFloat(document.getElementById('phi').value);
+    if (isNaN(phiDegrees)) phiDegrees = defaults.phiDegrees;
+
+    let mass = parseFloat(document.getElementById('mass').value);
+    if (isNaN(mass)) mass = defaults.mass;
+
+    let area = parseFloat(document.getElementById('area').value);
+    if (isNaN(area)) area = defaults.area;
+
+    let cd = parseFloat(document.getElementById('cd').value);
+    if (isNaN(cd)) cd = defaults.cd;
+
+    let cl = parseFloat(document.getElementById('cl').value);
+    if (isNaN(cl)) cl = defaults.cl;
+
+    let gyro = parseFloat(document.getElementById('gyro').value);
+    if (isNaN(gyro)) gyro = defaults.gyro;
+
+    let surface = parseFloat(document.getElementById('surface').value);
+    if (isNaN(surface)) surface = defaults.surface;
 
     // Convert angles from degrees to radians for the simulation
     const angleRadians = angleDegrees * Math.PI / 180;
