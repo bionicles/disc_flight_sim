@@ -112,6 +112,7 @@ impl Default for EnvParams {
 }
 
 /// A single point in the simulated trajectory of a disc.
+#[wasm_bindgen]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct TrajectoryPoint {
     /// X coordinate (meters) at this time point.
