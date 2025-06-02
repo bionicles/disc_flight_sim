@@ -20,6 +20,7 @@ use uom::si::{
     velocity::meter_per_second,
 };
 use wasm_bindgen::prelude::*;
+use web_sys;
 
 /// Parameters describing a disc golf disc's physical and flight characteristics.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
@@ -111,6 +112,21 @@ impl Default for EnvParams {
     }
 }
 
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct TrajectoryPointDTO {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub t: f32,
+    pub vx: f32,
+    pub vy: f32,
+    pub vz: f32,
+    pub ax: f32,
+    pub ay: f32,
+    pub az: f32,
+}
+
 /// A single point in the simulated trajectory of a disc.
 #[wasm_bindgen]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
@@ -147,7 +163,7 @@ pub struct TrajectoryPoint {
 /// - `env`: `JsValue` representing the environment parameters.
 ///
 /// # Returns
-/// - `JsValue`: A JSON array of `TrajectoryPoints` on success.
+/// - `JsValue`: A JSON array of `TrajectoryPointDTO` on success.
 #[must_use]
 #[wasm_bindgen]
 pub fn simulate_flight(disc: JsValue, env: JsValue) -> JsValue {
@@ -159,7 +175,39 @@ pub fn simulate_flight(disc: JsValue, env: JsValue) -> JsValue {
         Ok(e) => e,
         Err(e) => return JsValue::from_str(&format!("invalid env params: {e}")),
     };
-    let traj = simulate(&disc, &env);
+    let traj = simulate(&disc, &env); // traj is Vec<TrajectoryPointDTO>
+
+    // --- BEGIN ADDED LOGGING ---
+    if !traj.is_empty() {
+        if let Some(first_point) = traj.get(0) {
+            web_sys::console::log_1(&format!("Rust log (DTO): First point: {:?}", first_point).into());
+        }
+
+        if traj.len() > 1 {
+            if let Some(second_point) = traj.get(1) {
+                web_sys::console::log_1(&format!("Rust log (DTO): Second point: {:?}", second_point).into());
+            }
+        } else {
+            // Handle case where there's only one point, e.g. log it again or a specific message
+            web_sys::console::log_1(&"Rust log (DTO): Only one point in trajectory.".into());
+        }
+
+        // Log a point towards the end, e.g., second to last if more than one point exists
+        // Useful to see if values become NaN later in the simulation
+        if traj.len() > 1 {
+            if let Some(almost_last_point) = traj.get(traj.len().saturating_sub(2)) { // .saturating_sub(2) is safe
+                web_sys::console::log_1(&format!("Rust log (DTO): Point before last: {:?}", almost_last_point).into());
+            }
+        }
+         if let Some(last_point) = traj.last() { // Log the very last point
+            web_sys::console::log_1(&format!("Rust log (DTO): Last point: {:?}", last_point).into());
+        }
+
+    } else {
+        web_sys::console::log_1(&"Rust log (DTO): traj_dto_vec is empty!".into());
+    }
+    // --- END ADDED LOGGING ---
+
     match serde_wasm_bindgen::to_value(&traj) {
         Ok(val) => val,
         Err(e) => JsValue::from_str(&format!("serialize error: {e}")),
@@ -289,7 +337,7 @@ impl PhysicsState {
 /// - `env`: Reference to an [`EnvParams`] struct specifying environmental parameters such as air density, gravity, wind, and integration step size.
 ///
 /// # Returns
-/// A vector of [`TrajectoryPoint`] structs representing the disc's position and time at each simulation step.
+/// A vector of [`TrajectoryPointDTO`] structs representing the disc's position and time at each simulation step.
 ///
 /// # Behavior
 /// - The disc is launched from position (0, 0, 1.5) meters (1.5m above ground).
@@ -309,7 +357,7 @@ impl PhysicsState {
 /// # assert!(!path.is_empty());
 /// ```
 #[must_use]
-pub fn simulate(disc: &Disc, env: &EnvParams) -> Vec<TrajectoryPoint> {
+pub fn simulate(disc: &Disc, env: &EnvParams) -> Vec<TrajectoryPointDTO> {
     // State: [x, y, z, vx, vy, vz, spin]
     let mut t = Time::new::<second>(0.0);
     let mut state = PhysicsState {
@@ -338,7 +386,7 @@ pub fn simulate(disc: &Disc, env: &EnvParams) -> Vec<TrajectoryPoint> {
         }
 
 
-        path.push(TrajectoryPoint {
+        path.push(TrajectoryPointDTO {
             x: state.x.get::<meter>(),
             y: state.y.get::<meter>(),
             z: state.z.get::<meter>(),
@@ -386,7 +434,7 @@ pub fn simulate(disc: &Disc, env: &EnvParams) -> Vec<TrajectoryPoint> {
                 ),
             );
 
-            path.push(TrajectoryPoint {
+            path.push(TrajectoryPointDTO {
                 x: interp_val(
                     prev_state.x.get::<meter>(),
                     state.x.get::<meter>(),
