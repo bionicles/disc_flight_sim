@@ -23,7 +23,7 @@
 ### Build & Test
 
 ```sh
-git clone https://github.com/YOURNAME/disc_flight_sim.git
+git clone https://github.com/bionicles/disc_flight_sim.git
 cargo test
 ```
 
